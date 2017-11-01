@@ -14,6 +14,7 @@ for i_episode in range(500):
         env.render()
         #print(observation)
         action = env.action_space.sample()
+        print(env.action_space)
         time.sleep(0.1)
         print(action)
         observation, reward, done, info = env.step(action)

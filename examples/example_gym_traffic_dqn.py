@@ -5,6 +5,7 @@
 from gym_traffic.agents import DQN, EpsilonExplorer
 from gym_traffic.runners import SimpleRunner
 import gym
+import gym_traffic
 from gym_traffic.runners.agent_runner import run_agent
 import sys
 import argparse

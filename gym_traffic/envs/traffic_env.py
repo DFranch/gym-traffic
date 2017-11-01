@@ -49,8 +49,9 @@ class TrafficEnv(Env):
         self.sumo_cmd = [binary] + args
         self.sumo_step = 0
         self.lights = lights
+        print(self.lights)
         self.action_space = DiscreteToMultiDiscrete(
-            spaces.MultiDiscrete([[0, len(light.actions) - 1] for light in self.lights]))
+            spaces.MultiDiscrete([[0, len(light.actions) - 1] for light in self.lights]), 'all')
 
         trafficspace = spaces.Box(low=float('-inf'), high=float('inf'),
                                   shape=(len(self.loops) * len(self.loop_variables),))
