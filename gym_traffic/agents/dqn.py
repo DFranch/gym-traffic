@@ -21,8 +21,8 @@ def flatten_spaces(space):
 
 def calc_input_dim(space):
     dims = []
-    print "Space: {}".format(space)
-    print "Flattened: {}".format(flatten_spaces(space))
+    print("Space: {}".format(space))
+    print("Flattened: {}".format(flatten_spaces(space)))
     for i in flatten_spaces(space):
         if isinstance(i, spaces.Discrete):
             dims.append(i.n)

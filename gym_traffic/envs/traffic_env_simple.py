@@ -1,5 +1,5 @@
-from traffic_env import TrafficEnv
-from traffic_lights import TrafficLightTwoWay
+from .traffic_env import TrafficEnv
+from .traffic_lights import TrafficLightTwoWay
 import os
 
 
@@ -14,6 +14,7 @@ class TrafficEnvSimple(TrafficEnv):
         guifile = os.path.join(basepath, "view.settings.xml")
         addfile = os.path.join(basepath, "traffic.add.xml")
         exitloops = ["loop4", "loop5", "loop6", "loop7"]
+        self.viewer = None
         super(TrafficEnvSimple, self).__init__(mode=mode, lights=lights, netfile=netfile, routefile=routefile,
                                                guifile=guifile, loops=loops, addfile=addfile, simulation_end=300,
                                                lanes=lanes, exitloops=exitloops)

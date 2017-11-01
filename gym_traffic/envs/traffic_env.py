@@ -1,10 +1,9 @@
 from gym import Env
 from gym import error, spaces, utils
 from gym.utils import seeding
-import traci
-import traci.constants as tc
 from scipy.misc import imread
 from gym import spaces
+from .multi_discrete import DiscreteToMultiDiscrete
 from string import Template
 import os, sys
 import numpy as np
@@ -17,13 +16,14 @@ if 'SUMO_HOME' in os.environ:
 else:
     sys.exit("please declare environment variable 'SUMO_HOME'")
 
+import traci
+import traci.constants as tc
 
 class TrafficEnv(Env):
     metadata = {'render.modes': ['human', 'rgb_array']}
 
     def __init__(self, lights, netfile, routefile, guifile, addfile, loops=[], lanes=[], exitloops=[],
-                 tmpfile="tmp.rou.xml",
-                 pngfile="tmp.png", mode="gui", detector="detector0", simulation_end=3600, sleep_between_restart=1):
+                 tmpfile="tmp.rou.xml", mode="gui", detector="detector0", simulation_end=3600, sleep_between_restart=1):
         # "--end", str(simulation_end),
         self.simulation_end = simulation_end
         self.sleep_between_restart = sleep_between_restart
@@ -45,12 +45,12 @@ class TrafficEnv(Env):
         with open(routefile) as f:
             self.route = f.read()
         self.tmpfile = tmpfile
-        self.pngfile = pngfile
+        #self.pngfile = pngfile
         self.sumo_cmd = [binary] + args
         self.sumo_step = 0
         self.lights = lights
-        self.action_space = spaces.DiscreteToMultiDiscrete(
-            spaces.MultiDiscrete([[0, len(light.actions) - 1] for light in self.lights]), 'all')
+        self.action_space = DiscreteToMultiDiscrete(
+            spaces.MultiDiscrete([[0, len(light.actions) - 1] for light in self.lights]))
 
         trafficspace = spaces.Box(low=float('-inf'), high=float('inf'),
                                   shape=(len(self.loops) * len(self.loop_variables),))
@@ -123,8 +123,9 @@ class TrafficEnv(Env):
         return observation, reward, done, self.route_info
 
     def screenshot(self):
-        if self.mode == "gui":
-            traci.gui.screenshot("View #0", self.pngfile)
+        return ""
+        #if self.mode == "gui":
+        #traci.gui.screenshot("View #0", self.pngfile)
 
     def _observation(self):
         res = traci.inductionloop.getSubscriptionResults()
@@ -152,13 +153,13 @@ class TrafficEnv(Env):
                 self.viewer = None
             return
         if self.mode == "gui":
-            img = imread(self.pngfile, mode="RGB")
+            #img = imread(self.pngfile, mode="RGB")
             if mode == 'rgb_array':
-                return img
+                return ""
             elif mode == 'human':
                 from gym.envs.classic_control import rendering
                 if self.viewer is None:
                     self.viewer = rendering.SimpleImageViewer()
-                self.viewer.imshow(img)
+                #self.viewer.imshow(img)
         else:
             raise NotImplementedError("Only rendering in GUI mode is supported. Please use Traffic-...-gui-v0.")
