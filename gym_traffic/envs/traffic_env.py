@@ -10,6 +10,7 @@ import numpy as np
 import math
 import time
 
+
 if 'SUMO_HOME' in os.environ:
     tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
     sys.path.append(tools)
@@ -18,6 +19,7 @@ else:
 
 import traci
 import traci.constants as tc
+
 
 class TrafficEnv(Env):
     metadata = {'render.modes': ['human', 'rgb_array']}
@@ -45,13 +47,13 @@ class TrafficEnv(Env):
         with open(routefile) as f:
             self.route = f.read()
         self.tmpfile = tmpfile
-        #self.pngfile = pngfile
+        # self.pngfile = pngfile
         self.sumo_cmd = [binary] + args
         self.sumo_step = 0
         self.lights = lights
         print(self.lights)
         self.action_space = DiscreteToMultiDiscrete(
-            spaces.MultiDiscrete([[0, len(light.actions) - 1] for light in self.lights]), 'all')
+            spaces.MultiDiscrete([[0, len(light.actions) - 1] for light in self.lights]))
 
         trafficspace = spaces.Box(low=float('-inf'), high=float('inf'),
                                   shape=(len(self.loops) * len(self.loop_variables),))
@@ -125,8 +127,8 @@ class TrafficEnv(Env):
 
     def screenshot(self):
         return ""
-        #if self.mode == "gui":
-        #traci.gui.screenshot("View #0", self.pngfile)
+        # if self.mode == "gui":
+        # traci.gui.screenshot("View #0", self.pngfile)
 
     def _observation(self):
         res = traci.inductionloop.getSubscriptionResults()
@@ -154,13 +156,13 @@ class TrafficEnv(Env):
                 self.viewer = None
             return
         if self.mode == "gui":
-            #img = imread(self.pngfile, mode="RGB")
+            # img = imread(self.pngfile, mode="RGB")
             if mode == 'rgb_array':
                 return ""
             elif mode == 'human':
                 from gym.envs.classic_control import rendering
                 if self.viewer is None:
                     self.viewer = rendering.SimpleImageViewer()
-                #self.viewer.imshow(img)
+                    # self.viewer.imshow(img)
         else:
             raise NotImplementedError("Only rendering in GUI mode is supported. Please use Traffic-...-gui-v0.")
