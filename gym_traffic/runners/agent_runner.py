@@ -1,10 +1,6 @@
 # import os
 # os.environ["THEANO_FLAGS"] = "mode=FAST_COMPILE,device=cpu,floatX=float32"
 
-
-from gym_traffic.agents import DQN
-from gym_traffic.runners import SimpleRunner
-import gym
 from gym.wrappers import Monitor
 import os
 from tqdm import tqdm
