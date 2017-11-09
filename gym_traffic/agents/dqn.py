@@ -1,6 +1,6 @@
 from keras.models import Model
 from keras.layers import Dense, Flatten, LeakyReLU, Input, merge, Reshape, Lambda, BatchNormalization, Dropout
-#from keras.regularizers import L1L2Regularizer
+from keras.regularizers import l1_l2
 from keras.utils.np_utils import to_categorical
 import numpy as np
 from gym import spaces
@@ -71,20 +71,20 @@ class DQN(Agent):
 
     def build_network(self):
         hidden_dim = 1024
-        #reg = lambda: L1L2Regularizer(l1=1e-9, l2=1e-9)
+        # reg = lambda: L1L2Regularizer(l1=1e-9, l2=1e-9)
         x = Input(shape=(self.data_dim,), name="x")
         h = x
         h = Dense(int(hidden_dim))(h)
         h = Dropout(0.5)(h)
-        #h = BatchNormalization(mode=1)(h)
+        # h = BatchNormalization(mode=1)(h)
         h = LeakyReLU(0.2)(h)
         h = Dense(int(hidden_dim / 2))(h)
         h = Dropout(0.5)(h)
-        #h = BatchNormalization(mode=1)(h)
+        # h = BatchNormalization(mode=1)(h)
         h = LeakyReLU(0.2)(h)
         h = Dense(int(hidden_dim / 4))(h)
         h = Dropout(0.5)(h)
-        #h = BatchNormalization(mode=1)(h)
+        # h = BatchNormalization(mode=1)(h)
         h = LeakyReLU(0.2)(h)
         y = Dense(self.action_space.n)(h)
         # Q(s, a)
