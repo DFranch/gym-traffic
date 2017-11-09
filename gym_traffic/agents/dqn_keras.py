@@ -4,7 +4,7 @@ import random
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.optimizers import Adam
-from keras.callbacks import TensorBoard
+from keras.callbacks import CSVLogger
 
 from collections import deque
 
@@ -27,9 +27,9 @@ class DQN:
     def create_model(self):
         model = Sequential()
         state_shape = self.env.observation_space.shape
-        model.add(Dense(24, input_dim=state_shape[0], activation="relu"))
-        model.add(Dense(48, activation="relu"))
-        model.add(Dense(24, activation="relu"))
+        model.add(Dense(128, input_dim=state_shape[0], activation="relu"))
+        model.add(Dense(64, activation="relu"))
+        model.add(Dense(32, activation="relu"))
         model.add(Dense(self.env.action_space.n))
         model.compile(loss="mean_squared_error",
                       optimizer=Adam(lr=self.learning_rate))
@@ -64,7 +64,7 @@ class DQN:
             else:
                 Q_future = max(self.target_model.predict(new_state)[0])
                 target[0][action] = reward + Q_future * self.gamma
-            self.model.fit(state, target, epochs=1, verbose=0)
+            self.model.fit(state, target, epochs=1, verbose=0, callbacks=[CSVLogger('./logs/log.csv', append=True)])
 
     def target_train(self):
         weights = self.model.get_weights()
