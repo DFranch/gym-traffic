@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(name='gym_traffic',
       version='0.0.2',
-      install_requires=['gym'],
+      install_requires=['gym', 'keras'],
       author='Ben Striner',
       url='https://github.com/bstriner/gym-traffic',
       packages=find_packages())

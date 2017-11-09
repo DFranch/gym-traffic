@@ -52,13 +52,14 @@ class TrafficEnv(Env):
         self.sumo_step = 0
         self.lights = lights
         print(self.lights)
-        self.action_space = DiscreteToMultiDiscrete(
-            spaces.MultiDiscrete([[0, len(light.actions) - 1] for light in self.lights]))
+        self.action_space = spaces.Discrete(4)
+        # self.action_space = DiscreteToMultiDiscrete(
+        #    spaces.MultiDiscrete([[0, len(light.actions) - 1] for light in self.lights]))
 
         trafficspace = spaces.Box(low=float('-inf'), high=float('inf'),
                                   shape=(len(self.loops) * len(self.loop_variables),))
         lightspaces = [spaces.Discrete(len(light.actions)) for light in self.lights]
-        self.observation_space = spaces.Tuple([trafficspace] + lightspaces)
+        self.observation_space = spaces.Box(low=0, high=1000, shape=(1, 13))
 
         self.sumo_running = False
         self.viewer = None
@@ -79,6 +80,7 @@ class TrafficEnv(Env):
         if not self.sumo_running:
             self.write_routes()
             traci.start(self.sumo_cmd)
+
             for loopid in self.loops:
                 traci.inductionloop.subscribe(loopid, self.loop_variables)
             self.sumo_step = 0
@@ -109,12 +111,12 @@ class TrafficEnv(Env):
         return max(reward, 0)
 
     def _step(self, action):
-        action = self.action_space(action)
+        # action = self.action_space(action)
         self.start_sumo()
         self.sumo_step += 1
-        assert (len(action) == len(self.lights))
-        for act, light in zip(action, self.lights):
-            signal = light.act(act)
+        # assert (len(action) == len(self.lights))
+        for light in self.lights:
+            signal = light.act(action)
             traci.trafficlights.setRedYellowGreenState(light.id, signal)
         traci.simulationStep()
         observation = self._observation()
@@ -131,14 +133,31 @@ class TrafficEnv(Env):
         # traci.gui.screenshot("View #0", self.pngfile)
 
     def _observation(self):
-        res = traci.inductionloop.getSubscriptionResults()
-        obs = []
-        for loop in self.loops:
-            for var in self.loop_variables:
-                obs.append(res[loop][var])
-        trafficobs = np.array(obs)
-        lightobs = [light.state for light in self.lights]
-        return (trafficobs, lightobs)
+        lanes = traci.trafficlights.getControlledLanes("0")
+        edges = []
+        avg_edge_values = np.zeros(13)
+        for lane in lanes:
+            edges.append(traci.lane.getEdgeID(lane))
+
+        for e_id in edges:
+            # print(traci.edge.getCO2Emission(e_id))
+            edge_values = [
+                traci.edge.getWaitingTime(e_id),
+                traci.edge.getCO2Emission(e_id),
+                traci.edge.getCOEmission(e_id),
+                traci.edge.getHCEmission(e_id),
+                traci.edge.getPMxEmission(e_id),
+                traci.edge.getNOxEmission(e_id),
+                traci.edge.getFuelConsumption(e_id),
+                traci.edge.getLastStepMeanSpeed(e_id),
+                traci.edge.getLastStepOccupancy(e_id),
+                traci.edge.getLastStepLength(e_id),
+                traci.edge.getTraveltime(e_id),
+                traci.edge.getLastStepVehicleNumber(e_id),
+                traci.edge.getLastStepHaltingNumber(e_id)
+            ]
+            avg_edge_values = np.add(avg_edge_values, edge_values)
+        return avg_edge_values
 
     def _reset(self):
         self.stop_sumo()

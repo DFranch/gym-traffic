@@ -12,7 +12,7 @@ for i_episode in range(500):
     observation = env.reset()
     for t in range(1000):
         env.render()
-        #print(observation)
+        print(observation)
         action = env.action_space.sample()
         print(env.action_space)
         time.sleep(0.1)
