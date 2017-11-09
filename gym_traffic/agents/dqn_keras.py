@@ -1,6 +1,8 @@
 
 import numpy as np
 import random
+
+from keras.callbacks import CSVLogger
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.optimizers import Adam
@@ -63,7 +65,7 @@ class DQN:
             else:
                 Q_future = max(self.target_model.predict(new_state)[0])
                 target[0][action] = reward + Q_future * self.gamma
-            self.model.fit(state, target, epochs=1, verbose=0)
+            self.model.fit(state, target, epochs=1, verbose=0, callbacks=[CSVLogger('./logs/log.csv', append=True)])
 
     def target_train(self):
         weights = self.model.get_weights()
