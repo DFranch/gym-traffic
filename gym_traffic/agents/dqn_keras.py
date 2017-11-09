@@ -4,7 +4,6 @@ import random
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.optimizers import Adam
-from keras.callbacks import TensorBoard
 
 from collections import deque
 
@@ -17,7 +16,7 @@ class DQN:
         self.gamma = .95
         self.epsilon = .95
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.995
+        self.epsilon_decay = 0.999
         self.learning_rate = 0.005
         self.tau = .125
 
@@ -27,9 +26,9 @@ class DQN:
     def create_model(self):
         model = Sequential()
         state_shape = self.env.observation_space.shape
-        model.add(Dense(24, input_dim=state_shape[0], activation="relu"))
-        model.add(Dense(48, activation="relu"))
-        model.add(Dense(24, activation="relu"))
+        model.add(Dense(128, input_dim=state_shape[0], activation="relu"))
+        model.add(Dense(64, activation="relu"))
+        model.add(Dense(32, activation="relu"))
         model.add(Dense(self.env.action_space.n))
         model.compile(loss="mean_squared_error",
                       optimizer=Adam(lr=self.learning_rate))
@@ -40,11 +39,11 @@ class DQN:
         self.epsilon = max(self.epsilon_min, self.epsilon)
         if np.random.random() < self.epsilon:
             sampel = self.env.action_space.sample()
-            print("Taking random action: {0}".format(sampel))
+            # print("Taking random action: {0}".format(sampel))
             return sampel
         else:
             action = np.argmax(self.model.predict(state)[0])
-            print("Taking predicted action: {0}".format(action))
+            # print("Taking predicted action: {0}".format(action))
             return action
 
     def remember(self, state, action, reward, new_state, done):

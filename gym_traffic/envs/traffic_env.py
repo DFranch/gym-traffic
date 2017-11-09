@@ -10,7 +10,6 @@ import numpy as np
 import math
 import time
 
-
 if 'SUMO_HOME' in os.environ:
     tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
     sys.path.append(tools)
@@ -93,22 +92,58 @@ class TrafficEnv(Env):
             self.sumo_running = False
 
     def _reward(self):
+        lanes = traci.trafficlights.getControlledLanes("0")
+        edges = []
+        reward = 0
+        avg_edge_values = np.zeros(4)
+        for lane in lanes:
+            edges.append(traci.lane.getEdgeID(lane))
+
+        for e_id in edges:
+            edge_values = [
+                traci.edge.getWaitingTime(e_id),  # 0
+                traci.edge.getCO2Emission(e_id),  # 1
+                traci.edge.getFuelConsumption(e_id),  # 7
+                traci.edge.getLastStepVehicleNumber(e_id),  # 11
+            ]
+            if edge_values[3] > 0:
+                edge_values[2] /= edge_values[3]
+                edge_values[1] /= edge_values[3]
+                edge_values[0] /= edge_values[3]
+            avg_edge_values = np.add(avg_edge_values, edge_values)
+
+        lightState = traci.trafficlights.getRedYellowGreenState("0")
+        waitingFactor = -avg_edge_values[0] / 100
+        if waitingFactor == 0:
+            waitingFactor += 1
+        co2_factor = -avg_edge_values[1] / 3000
+        fuel_factor = -avg_edge_values[2]
+        green_factor = 7 * (lightState.count("g") + lightState.count("G")) / len(lanes)
+        yellow_factor = -0.5 * lightState.count("y") / len(lanes)
+        red_factor = -2 * lightState.count("r") / len(lanes)
+
+        reward += waitingFactor + co2_factor + fuel_factor + green_factor + yellow_factor + red_factor
+        return reward
         # reward = 0.0
         # for lane in self.lanes:
         #    reward -= traci.lane.getWaitingTime(lane)
         # return reward
-        speed = traci.multientryexit.getLastStepMeanSpeed(self.detector)
-        count = traci.multientryexit.getLastStepVehicleNumber(self.detector)
-        reward = speed * count
+        # speed = traci.multientryexit.getLastStepMeanSpeed(self.detector)
+        # count = traci.multientryexit.getLastStepVehicleNumber(self.detector)
+        # if count == 0:
+        #    return speed
+        # reward = speed / count
         # print("Speed: {}".format(traci.multientryexit.getLastStepMeanSpeed(self.detector)))
         # print("Count: {}".format(traci.multientryexit.getLastStepVehicleNumber(self.detector)))
         # reward = np.sqrt(speed)
         # print "Reward: {}".format(reward)
         # return speed
-        # reward = 0.0
-        # for loop in self.exitloops:
-        #    reward += traci.inductionloop.getLastStepVehicleNumber(loop)
-        return max(reward, 0)
+
+    # reward = 0.0
+    # for loop in self.exitloops:
+    #    reward += traci.inductionloop.getLastStepVehicleNumber(loop)
+
+    # return max(reward, 0)
 
     def _step(self, action):
         # action = self.action_space(action)
@@ -142,21 +177,27 @@ class TrafficEnv(Env):
         for e_id in edges:
             # print(traci.edge.getCO2Emission(e_id))
             edge_values = [
-                traci.edge.getWaitingTime(e_id),
-                traci.edge.getCO2Emission(e_id),
+                traci.edge.getWaitingTime(e_id),  # 0
+                traci.edge.getCO2Emission(e_id),  # 1
                 traci.edge.getCOEmission(e_id),
                 traci.edge.getHCEmission(e_id),
                 traci.edge.getPMxEmission(e_id),
                 traci.edge.getNOxEmission(e_id),
                 traci.edge.getFuelConsumption(e_id),
-                traci.edge.getLastStepMeanSpeed(e_id),
+                traci.edge.getLastStepMeanSpeed(e_id),  # 7
                 traci.edge.getLastStepOccupancy(e_id),
                 traci.edge.getLastStepLength(e_id),
                 traci.edge.getTraveltime(e_id),
-                traci.edge.getLastStepVehicleNumber(e_id),
+                traci.edge.getLastStepVehicleNumber(e_id),  # 11
                 traci.edge.getLastStepHaltingNumber(e_id)
             ]
+            if edge_values[11] > 0:
+                edge_values[7] /= edge_values[11]
+                edge_values[1] /= edge_values[11]
+                edge_values[0] /= edge_values[11]
             avg_edge_values = np.add(avg_edge_values, edge_values)
+
+        avg_edge_values /= len(edges)
         return avg_edge_values
 
     def _reset(self):

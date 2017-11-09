@@ -5,7 +5,7 @@ import os
 
 class TrafficEnvSimple(TrafficEnv):
     def __init__(self, mode="gui"):
-        lights = [TrafficLightTwoWay(id="0", yield_time=5)]
+        lights = [TrafficLightTwoWay(id="0", yield_time=0)]
         loops = ["loop{}".format(i) for i in range(12)]
         lanes = ["n_0_0", "s_0_0", "e_0_0", "w_0_0", "0_n_0", "0_s_0", "0_e_0", "0_w_0"]
         basepath = os.path.join(os.path.dirname(__file__), "config", "simple")
