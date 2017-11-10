@@ -84,6 +84,12 @@ class TrafficEnv(Env):
         self.sumo_running = False
         self.viewer = None
 
+    def add_observations_to_df(self, observations):
+        self.observations_df = self.observations_df.append(
+            pd.Series(observations, index=self.observations_df.columns),
+            ignore_index=True
+        )
+
     def add_observations_to_csv(self):
         self.observations_df.to_csv(self.observations_file_name, index=False, header=False, mode="a")
 
@@ -218,10 +224,7 @@ class TrafficEnv(Env):
             ]
 
             # Write observations to DF for visual evaluation later
-            self.observations_df = self.observations_df.append(
-                pd.Series(edge_values, index=self.observations_df.columns),
-                ignore_index=True
-            )
+            self.add_observations_to_df(edge_values)
 
             if edge_values[11] > 0:
                 edge_values[7] /= edge_values[11]
