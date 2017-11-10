@@ -1,14 +1,14 @@
-from gym import Env
-from gym import error, spaces, utils
-from gym.utils import seeding
-from scipy.misc import imread
-from gym import spaces
-from .multi_discrete import DiscreteToMultiDiscrete
-from string import Template
-import os, sys
-import numpy as np
-import math
+import os
+import sys
 import time
+from string import Template
+import pandas as pd
+import numpy as np
+from threading import Thread
+import time
+from gym import Env
+from gym import spaces
+from gym.utils import seeding
 
 if 'SUMO_HOME' in os.environ:
     tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
@@ -60,8 +60,32 @@ class TrafficEnv(Env):
         lightspaces = [spaces.Discrete(len(light.actions)) for light in self.lights]
         self.observation_space = spaces.Box(low=0, high=1000, shape=(1, 13))
 
+        self.observations_df = pd.DataFrame(columns=[
+            "waiting_time",
+            "co2_emission",
+            "co_emission",
+            "hc_emission",
+            "pmx_emission",
+            "nox_emission",
+            "fuel_consumption",
+            "last_step_mean_speed",
+            "last_step_occupancy",
+            "last_step_length",
+            "travel_time",
+            "last_step_vehicle_number",
+            "last_step_halting_number"
+        ])
+
+        self.observations_file_name = 'observations_{0}.csv'.format(int(time.time()))
+
+        # Create new CSV file when env starts
+        self.observations_df.to_csv(self.observations_file_name, index=False)
+
         self.sumo_running = False
         self.viewer = None
+
+    def add_observations_to_csv(self):
+        self.observations_df.to_csv(self.observations_file_name, index=False, header=False, mode="a")
 
     def relative_path(self, *paths):
         os.path.join(os.path.dirname(__file__), *paths)
@@ -95,7 +119,7 @@ class TrafficEnv(Env):
         lanes = traci.trafficlights.getControlledLanes("0")
         edges = []
         reward = 0
-        avg_edge_values = np.zeros(4)
+        avg_edge_values = np.zeros(5)
         for lane in lanes:
             edges.append(traci.lane.getEdgeID(lane))
 
@@ -105,6 +129,7 @@ class TrafficEnv(Env):
                 traci.edge.getCO2Emission(e_id),  # 1
                 traci.edge.getFuelConsumption(e_id),  # 7
                 traci.edge.getLastStepVehicleNumber(e_id),  # 11
+                traci.edge.getLastStepMeanSpeed(e_id)
             ]
             if edge_values[3] > 0:
                 edge_values[2] /= edge_values[3]
@@ -191,6 +216,13 @@ class TrafficEnv(Env):
                 traci.edge.getLastStepVehicleNumber(e_id),  # 11
                 traci.edge.getLastStepHaltingNumber(e_id)
             ]
+
+            # Write observations to DF for visual evaluation later
+            self.observations_df = self.observations_df.append(
+                pd.Series(edge_values, index=self.observations_df.columns),
+                ignore_index=True
+            )
+
             if edge_values[11] > 0:
                 edge_values[7] /= edge_values[11]
                 edge_values[1] /= edge_values[11]
@@ -198,6 +230,9 @@ class TrafficEnv(Env):
             avg_edge_values = np.add(avg_edge_values, edge_values)
 
         avg_edge_values /= len(edges)
+
+        # self.add_observations_to_csv()
+
         return avg_edge_values
 
     def _reset(self):
