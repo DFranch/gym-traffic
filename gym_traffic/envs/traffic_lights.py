@@ -22,7 +22,7 @@ class TrafficLight(object):
 
 class TrafficLightTwoWay(TrafficLight):
     def __init__(self, id, yield_time=5):
-        super(TrafficLightTwoWay, self).__init__(id=id, actions=["GrGr", "rGrG", "yryr", "ryry"])
+        super(TrafficLightTwoWay, self).__init__(id=id, actions=["GrGr", "yryr", "rGrG", "ryry"])
         self.yield_time = yield_time
 
     def action_allowed(self, action):

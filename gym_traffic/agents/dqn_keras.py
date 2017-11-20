@@ -18,9 +18,9 @@ class DQN:
         self.gamma = .95
         self.epsilon = .95
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.999
+        self.epsilon_decay = 0.9995
         self.learning_rate = 0.005
-        self.tau = .125
+        self.tau = .250
 
         self.model = self.create_model()
         self.target_model = self.create_model()
@@ -28,10 +28,11 @@ class DQN:
     def create_model(self):
         model = Sequential()
         state_shape = self.env.observation_space.shape
-        model.add(Dense(128, input_dim=state_shape[0], activation="relu"))
+        model.add(Dense(256, input_dim=state_shape[0], activation="relu"))
+        model.add(Dense(128, activation="relu"))
         model.add(Dense(64, activation="relu"))
         model.add(Dense(32, activation="relu"))
-        model.add(Dense(self.env.action_space.n))
+        model.add(Dense(self.env.action_space.n, activation="softmax"))
         model.compile(loss="mean_squared_error",
                       optimizer=Adam(lr=self.learning_rate))
         return model
@@ -39,20 +40,21 @@ class DQN:
     def act(self, state):
         self.epsilon *= self.epsilon_decay
         self.epsilon = max(self.epsilon_min, self.epsilon)
+        # print("Epsilon: {}".format(self.epsilon))
         if np.random.random() < self.epsilon:
             sampel = self.env.action_space.sample()
             # print("Taking random action: {0}".format(sampel))
-            return sampel
+            return sampel, self.epsilon
         else:
             action = np.argmax(self.model.predict(state)[0])
             # print("Taking predicted action: {0}".format(action))
-            return action
+            return action, self.epsilon
 
     def remember(self, state, action, reward, new_state, done):
         self.memory.append([state, action, reward, new_state, done])
 
     def replay(self):
-        batch_size = 32
+        batch_size = 64
         if len(self.memory) < batch_size:
             return
 
@@ -65,7 +67,7 @@ class DQN:
             else:
                 Q_future = max(self.target_model.predict(new_state)[0])
                 target[0][action] = reward + Q_future * self.gamma
-            self.model.fit(state, target, epochs=1, verbose=0, callbacks=[CSVLogger('./logs/log.csv', append=True)])
+            self.model.fit(state, target, epochs=1, verbose=0)
 
     def target_train(self):
         weights = self.model.get_weights()
