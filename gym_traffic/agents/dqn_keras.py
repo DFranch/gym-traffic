@@ -1,8 +1,9 @@
 
 import numpy as np
 import random
+import pandas as pd
+import time
 
-from keras.callbacks import CSVLogger
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.optimizers import Adam
@@ -20,7 +21,16 @@ class DQN:
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.9995
         self.learning_rate = 0.005
-        self.tau = .250
+        self.tau = .125
+
+        self.observations_df = pd.DataFrame(columns=[
+            "#run",
+            "waiting_time",
+            "action",
+            "confidence"
+        ])
+
+        self.observations_file_name = 'observations_{0}_double.csv'.format(int(time.time()))
 
         self.model = self.create_model()
         self.target_model = self.create_model()
@@ -43,12 +53,15 @@ class DQN:
         # print("Epsilon: {}".format(self.epsilon))
         if np.random.random() < self.epsilon:
             sampel = self.env.action_space.sample()
-            # print("Taking random action: {0}".format(sampel))
-            return sampel, self.epsilon
+            #print("Taking random action: {0}".format(sampel))
+            return sampel, self.epsilon, "RANDOM"
         else:
+            #print("self.model.predict(state)[0]): {}".format(self.model.predict(state)[0]))
             action = np.argmax(self.model.predict(state)[0])
-            # print("Taking predicted action: {0}".format(action))
-            return action, self.epsilon
+            confidence = max(self.model.predict(state)[0])
+            #print("Taking predicted action: {0}, with confidence: {1}".format(action, confidence))
+            return action, self.epsilon, confidence
+
 
     def remember(self, state, action, reward, new_state, done):
         self.memory.append([state, action, reward, new_state, done])
@@ -66,6 +79,8 @@ class DQN:
                 target[0][action] = reward
             else:
                 Q_future = max(self.target_model.predict(new_state)[0])
+                #print(self.target_model.predict(new_state)[0])
+                #print("Q_future: {}".format(Q_future))
                 target[0][action] = reward + Q_future * self.gamma
             self.model.fit(state, target, epochs=1, verbose=0)
 
@@ -78,3 +93,13 @@ class DQN:
 
     def save_model(self, fn):
         self.model.save(fn)
+
+    def add_observations_to_df(self, observations):
+        self.observations_df = self.observations_df.append(
+            pd.Series(observations, index=self.observations_df.columns),
+            ignore_index=True
+        )
+
+    def add_observations_to_csv(self):
+        self.observations_df.to_csv(self.observations_file_name, index=False, header=False, mode="a")
+        self.observations_df = pd.DataFrame()

@@ -6,6 +6,7 @@ class TrafficLight(object):
         self.actions = actions
 
     def signal(self):
+
         return self.actions[self.state]
 
     def act(self, action):
@@ -22,18 +23,8 @@ class TrafficLight(object):
 
 class TrafficLightTwoWay(TrafficLight):
     def __init__(self, id, yield_time=5):
-        super(TrafficLightTwoWay, self).__init__(id=id, actions=["GrGr", "yryr", "rGrG", "ryry"])
+        super(TrafficLightTwoWay, self).__init__(id=id, actions=["ryry", "GrGr", "rGrG", "yryr"])
         self.yield_time = yield_time
 
     def action_allowed(self, action):
-        if self.state == 0:
-            return action == 2
-        elif self.state == 1:
-            return action == 3
-        elif self.state == 2:
-            return action == 1 and self.step > self.yield_time
-        elif self.state == 3:
-            return action == 0 and self.step > self.yield_time
-        else:
-            raise ValueError("Invalid state {}".format(self.state))
-        end
+        return True

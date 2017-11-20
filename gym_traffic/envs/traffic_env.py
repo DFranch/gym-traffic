@@ -59,38 +59,9 @@ class TrafficEnv(Env):
         lightspaces = [spaces.Discrete(len(light.actions)) for light in self.lights]
         self.observation_space = spaces.Box(low=0, high=1000, shape=(1, 14))
 
-        self.observations_df = pd.DataFrame(columns=[
-            "waiting_time",
-            "co2_emission",
-            "co_emission",
-            "hc_emission",
-            "pmx_emission",
-            "nox_emission",
-            "fuel_consumption",
-            "last_step_mean_speed",
-            "last_step_occupancy",
-            "last_step_length",
-            "travel_time",
-            "last_step_vehicle_number",
-            "last_step_halting_number"
-        ])
-
-        # self.observations_file_name = 'observations_{0}.csv'.format(int(time.time()))
-
-        # Create new CSV file when env starts
-        # self.observations_df.to_csv(self.observations_file_name, index=False)
 
         self.sumo_running = False
         self.viewer = None
-
-    def add_observations_to_df(self, observations):
-        self.observations_df = self.observations_df.append(
-            pd.Series(observations, index=self.observations_df.columns),
-            ignore_index=True
-        )
-
-    # def add_observations_to_csv(self):
-      #  self.observations_df.to_csv(self.observations_file_name, index=False, header=False, mode="a")
 
     def relative_path(self, *paths):
         os.path.join(os.path.dirname(__file__), *paths)
@@ -137,14 +108,16 @@ class TrafficEnv(Env):
                 traci.edge.getLastStepMeanSpeed(e_id)
             ]
             if edge_values[3] > 0:
+                #print("number of cars: {}".format(edge_values[3]))
                 edge_values[2] /= edge_values[3]
                 edge_values[1] /= edge_values[3]
                 edge_values[0] /= edge_values[3]
             avg_edge_values = np.add(avg_edge_values, edge_values)
 
         lightState = traci.trafficlights.getRedYellowGreenState("0")
-        waitingFactor = -avg_edge_values[0] / 100
-        speed = avg_edge_values[4]
+        waitingFactor = -avg_edge_values[0]
+        speed = avg_edge_values[4] / len(edges)
+        #print(speed)
         #print(speed)
         if waitingFactor == 0:
             waitingFactor += 1
@@ -155,7 +128,8 @@ class TrafficEnv(Env):
         red_factor = -2 * lightState.count("r") / len(lanes)
 
         #reward += waitingFactor + co2_factor + fuel_factor + green_factor + yellow_factor + red_factor
-        reward = speed
+        reward = waitingFactor
+        #print(reward)
         return reward
         # reward = 0.0
         # for lane in self.lanes:
@@ -227,7 +201,7 @@ class TrafficEnv(Env):
             ]
 
             # Write observations to DF for visual evaluation later
-            #self.add_observations_to_df(edge_values)
+            # self.add_observations_to_df([(100-edge_values[0])])
 
             if edge_values[11] > 0:
                 edge_values[7] /= edge_values[11]
@@ -238,7 +212,7 @@ class TrafficEnv(Env):
         avg_edge_values /= len(edges)
         avg_edge_values[13] = traci.simulation.getCurrentTime()
 
-        # self.add_observations_to_csv()
+        #self.add_observations_to_csv()
         #print(avg_edge_values[13])
         return avg_edge_values
 
