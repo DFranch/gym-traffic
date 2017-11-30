@@ -5,7 +5,7 @@ import time
 import pandas as pd
 
 def main():
-    env = gym.make('Traffic-Simple-cli-v0')
+    env = gym.make('Traffic-Simple-gui-v0')
 
     trials = 1000
     trial_len = 300
@@ -15,16 +15,6 @@ def main():
     total_waiting = 0
     counter = 0
     observations_file_name = 'run_results_{0}.csv'.format(int(time.time()))
-    observations_df = pd.DataFrame(columns=[
-        "#run",
-        "time_elapsed",
-        "total_reward",
-        "mean_reward",
-        "last_epsilon",
-        "total_waiting_time"
-    ])
-
-
 
     # updateTargetNetwork = 1000
     dqn_agent = DQN(env=env)
@@ -33,7 +23,7 @@ def main():
         cur_state = env.reset()
         start_time = time.time()
         if counter > 0:
-            #dqn_agent.add_observations_to_csv()
+
             print("Run number: {}".format(counter))
             print("Time elapsed: {}".format(elapsed_time))
             print("Total Reward: {}".format(total_reward))
@@ -41,11 +31,20 @@ def main():
             print("Last Epsilon: {}".format(last_epsilon))
             print("Total Waiting Time: {}".format(total_waiting))
             results = [counter, elapsed_time, total_reward, (total_reward / trial_len), last_epsilon, total_waiting]
+            observations_df = pd.DataFrame(columns=[
+                "#run",
+                "time_elapsed",
+                "total_reward",
+                "mean_reward",
+                "last_epsilon",
+                "total_waiting_time"
+            ])
             observations_df = observations_df.append(
                 pd.Series(results, index=observations_df.columns),
                 ignore_index=True
             )
             observations_df.to_csv(observations_file_name, index=False, header=False, mode="a")
+            
         counter += 1
         total_reward = 0
         elapsed_time = 0
@@ -74,15 +73,6 @@ def main():
 
             if done:
                 break
-        # if step >= 199:
-        #     print("Failed to complete in trial {}".format(trial))
-        #     if step % 10 == 0:
-        #         dqn_agent.save_model("trial-{}.model".format(trial))
-        # else:
-        #     print("Completed in {} trials".format(trial))
-        #     dqn_agent.save_model("success.model")
-        #     break
-
 
 if __name__ == "__main__":
     main()

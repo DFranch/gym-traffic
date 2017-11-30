@@ -156,9 +156,9 @@ class TrafficEnv(Env):
         self.start_sumo()
         self.sumo_step += 1
         # assert (len(action) == len(self.lights))
-        for light in self.lights:
-            signal = light.act(action)
-            traci.trafficlights.setRedYellowGreenState(light.id, signal)
+        # for light in self.lights:
+            # signal = light.act(action)
+            # traci.trafficlights.setRedYellowGreenState(light.id, signal)
         traci.simulationStep()
         observation = self._observation()
         reward = self._reward()
