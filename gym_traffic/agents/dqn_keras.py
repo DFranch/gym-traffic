@@ -20,7 +20,7 @@ class DQN:
         self.epsilon = .95
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.9995
-        self.learning_rate = 0.005
+        self.learning_rate = 0.0005
         self.tau = .125
 
         self.observations_df = pd.DataFrame(columns=[
@@ -59,7 +59,7 @@ class DQN:
             #print("self.model.predict(state)[0]): {}".format(self.model.predict(state)[0]))
             action = np.argmax(self.model.predict(state)[0])
             confidence = max(self.model.predict(state)[0])
-            #print("Taking predicted action: {0}, with confidence: {1}".format(action, confidence))
+            # print("Taking predicted action: {0}, with confidence: {1}".format(action, confidence))
             return action, self.epsilon, confidence
 
 

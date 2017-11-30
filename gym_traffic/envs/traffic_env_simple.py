@@ -20,8 +20,8 @@ class TrafficEnvSimple(TrafficEnv):
                                                lanes=lanes, exitloops=exitloops)
 
     def route_sample(self):
-        ns = 0.2
-        ew = 0.8
+        ns = 0.02
+        ew = 0.08
         return {"ns": ns,
                 "sn": ns,
                 "ew": ew,

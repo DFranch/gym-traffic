@@ -2,11 +2,10 @@ import gym
 
 from gym_traffic.agents import DQN
 import time
+import pandas as pd
 
 def main():
-    env = gym.make('Traffic-Simple-gui-v0')
-    gamma = 0.9
-    epsilon = .95
+    env = gym.make('Traffic-Simple-cli-v0')
 
     trials = 1000
     trial_len = 300
@@ -15,6 +14,18 @@ def main():
     last_epsilon = 0
     total_waiting = 0
     counter = 0
+    observations_file_name = 'run_results_{0}.csv'.format(int(time.time()))
+    observations_df = pd.DataFrame(columns=[
+        "#run",
+        "time_elapsed",
+        "total_reward",
+        "mean_reward",
+        "last_epsilon",
+        "total_waiting_time"
+    ])
+
+
+
     # updateTargetNetwork = 1000
     dqn_agent = DQN(env=env)
     steps = []
@@ -29,6 +40,12 @@ def main():
             print("Mean Reward: {}".format(total_reward / trial_len))
             print("Last Epsilon: {}".format(last_epsilon))
             print("Total Waiting Time: {}".format(total_waiting))
+            results = [counter, elapsed_time, total_reward, (total_reward / trial_len), last_epsilon, total_waiting]
+            observations_df = observations_df.append(
+                pd.Series(results, index=observations_df.columns),
+                ignore_index=True
+            )
+            observations_df.to_csv(observations_file_name, index=False, header=False, mode="a")
         counter += 1
         total_reward = 0
         elapsed_time = 0
@@ -39,7 +56,7 @@ def main():
 
             action, epsilon, confidence = dqn_agent.act(cur_state)
             new_state, reward, done, _ = env.step(action)
-            print("Reward: {}".format(reward))
+            # print("Reward: {}".format(reward))
             # print("Waiting time: {}".format(cur_state[0]))
             total_waiting += cur_state[0]
             dqn_agent.add_observations_to_df([counter, cur_state[0], action, confidence])

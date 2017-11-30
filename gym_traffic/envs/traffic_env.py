@@ -127,7 +127,7 @@ class TrafficEnv(Env):
         if waitingFactor == 0:
             reward = 10
         else:
-            reward = (waitingFactor*waitingFactor)
+            reward = -(waitingFactor*waitingFactor)
 
         return reward
         # reward = 0.0
