@@ -30,7 +30,7 @@ class DQN:
             "confidence"
         ])
 
-        self.observations_file_name = 'observations_{0}_double.csv'.format(int(time.time()))
+        self.observations_file_name = 'observations_{0}_run.csv'.format(int(time.time()))
 
         self.model = self.create_model()
         self.target_model = self.create_model()
@@ -102,4 +102,9 @@ class DQN:
 
     def add_observations_to_csv(self):
         self.observations_df.to_csv(self.observations_file_name, index=False, header=False, mode="a")
-        self.observations_df = pd.DataFrame()
+        self.observations_df = pd.DataFrame(columns=[
+            "#run",
+            "waiting_time",
+            "action",
+            "confidence"
+        ])

@@ -4,7 +4,7 @@ from gym_traffic.agents import DQN
 import time
 
 def main():
-    env = gym.make('Traffic-Simple-cli-v0')
+    env = gym.make('Traffic-Simple-gui-v0')
     gamma = 0.9
     epsilon = .95
 
@@ -22,7 +22,7 @@ def main():
         cur_state = env.reset()
         start_time = time.time()
         if counter > 0:
-            dqn_agent.add_observations_to_csv()
+            #dqn_agent.add_observations_to_csv()
             print("Run number: {}".format(counter))
             print("Time elapsed: {}".format(elapsed_time))
             print("Total Reward: {}".format(total_reward))
@@ -39,7 +39,7 @@ def main():
 
             action, epsilon, confidence = dqn_agent.act(cur_state)
             new_state, reward, done, _ = env.step(action)
-            # print("Reward: {}".format(reward))
+            print("Reward: {}".format(reward))
             # print("Waiting time: {}".format(cur_state[0]))
             total_waiting += cur_state[0]
             dqn_agent.add_observations_to_df([counter, cur_state[0], action, confidence])

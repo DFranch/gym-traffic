@@ -117,10 +117,6 @@ class TrafficEnv(Env):
         lightState = traci.trafficlights.getRedYellowGreenState("0")
         waitingFactor = -avg_edge_values[0]
         speed = avg_edge_values[4] / len(edges)
-        #print(speed)
-        #print(speed)
-        if waitingFactor == 0:
-            waitingFactor += 1
         co2_factor = -avg_edge_values[1] / 3000
         fuel_factor = -avg_edge_values[2]
         green_factor = 7 * (lightState.count("g") + lightState.count("G")) / len(lanes)
@@ -128,8 +124,11 @@ class TrafficEnv(Env):
         red_factor = -2 * lightState.count("r") / len(lanes)
 
         #reward += waitingFactor + co2_factor + fuel_factor + green_factor + yellow_factor + red_factor
-        reward = waitingFactor
-        #print(reward)
+        if waitingFactor == 0:
+            reward = 10
+        else:
+            reward = (waitingFactor*waitingFactor)
+
         return reward
         # reward = 0.0
         # for lane in self.lanes:
@@ -177,7 +176,7 @@ class TrafficEnv(Env):
     def _observation(self):
         lanes = traci.trafficlights.getControlledLanes("0")
         edges = []
-        avg_edge_values = np.zeros(14)
+        avg_edge_values = np.zeros(13)
         for lane in lanes:
             edges.append(traci.lane.getEdgeID(lane))
 
@@ -196,8 +195,7 @@ class TrafficEnv(Env):
                 traci.edge.getLastStepLength(e_id),
                 traci.edge.getTraveltime(e_id),
                 traci.edge.getLastStepVehicleNumber(e_id),  # 11
-                traci.edge.getLastStepHaltingNumber(e_id),
-                0
+                traci.edge.getLastStepHaltingNumber(e_id)
             ]
 
             # Write observations to DF for visual evaluation later
@@ -210,10 +208,7 @@ class TrafficEnv(Env):
             avg_edge_values = np.add(avg_edge_values, edge_values)
 
         avg_edge_values /= len(edges)
-        avg_edge_values[13] = traci.simulation.getCurrentTime()
 
-        #self.add_observations_to_csv()
-        #print(avg_edge_values[13])
         return avg_edge_values
 
     def _reset(self):
