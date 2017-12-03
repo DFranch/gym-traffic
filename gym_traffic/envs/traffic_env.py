@@ -197,6 +197,7 @@ class TrafficEnv(Env):
                 traci.edge.getLastStepVehicleNumber(e_id),  # 11
                 traci.edge.getLastStepHaltingNumber(e_id)
             ]
+            #print("Simulation Time: {}".format(traci.simulation.getCurrentTime() / 100))
 
             # Write observations to DF for visual evaluation later
             # self.add_observations_to_df([(100-edge_values[0])])
@@ -212,6 +213,7 @@ class TrafficEnv(Env):
         return avg_edge_values
 
     def _reset(self):
+
         self.stop_sumo()
         # sleep required on some systems
         if self.sleep_between_restart > 0:

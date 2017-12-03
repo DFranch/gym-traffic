@@ -5,7 +5,7 @@ import time
 import pandas as pd
 
 def main():
-    env = gym.make('Traffic-Simple-cli-v0')
+    env = gym.make('Traffic-Simple-gui-v0')
 
     trials = 1000
     trial_len = 300
@@ -40,6 +40,7 @@ def main():
             print("Mean Reward: {}".format(total_reward / trial_len))
             print("Last Epsilon: {}".format(last_epsilon))
             print("Total Waiting Time: {}".format(total_waiting))
+            print("Mean Waiting Time: {}".format(total_waiting/trial_len))
             results = [counter, elapsed_time, total_reward, (total_reward / trial_len), last_epsilon, total_waiting]
             observations_df = observations_df.append(
                 pd.Series(results, index=observations_df.columns),
